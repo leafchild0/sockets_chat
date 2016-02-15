@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+	<title>Simple socket chat</title>
+	<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<ul id="messages"></ul>
+<div id="mainDiv">
+	<label id="nameLabel">Your name is <span>Guest</span>.Type /name new_name to change name</label>
+	<form action="">
+		<label for="send">Your Message</label>
+		<input id="send" autocomplete="off"/>
+		<button>Send</button>
+	</form>
+</div>
+
+<script src="/node_modules/socket.io-client/socket.io.js"></script>
+<script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
+<script>
+	var socket = io();
+	var userName = 'Guest';
+
+	$('form').submit(function(){
+		var input = $('#send');
+
+		//if /name = change the name
+		if(input.val().indexOf('/name') != -1) {
+			userName = input.val().replace('/name', '');
+			//Replace the name
+			$('#nameLabel').find('span').text(userName);
+		}
+		else {
+			addMessage({user:userName, msg: input.val()})
+			socket.emit('message', { user: userName, msg: input.val() });
+		}
+
+		input.val('');
+		return false;
+	});
+
+	socket.on('message', function(msg){
+		addMessage(msg);
+	});
+	socket.on('disconnected', function(msg){
+		$('#messages').append($('<li>').html(msg));
+	});
+	socket.on('connected', function(msg){
+		$('#messages').append($('<li>').html(msg));
+	});
+
+	addMessage = function(message) {
+		$( '#messages' ).append( $( '<li>' ).html(
+			  '<i>' + message.user + '</i>:   ' +
+			  message.msg ) );
+	};
+
+
+</script>
+</body>
+</html>
